@@ -19,7 +19,7 @@ class DownloadLink{
 }
 
 class VideoController: UIViewController {
-
+    
     var bounds = UIScreen.main.bounds
     var video: Video!
     
@@ -32,12 +32,12 @@ class VideoController: UIViewController {
         let task = URLSession.shared.dataTask(with: url!, completionHandler: {(data, response, error) in
             let stringa = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
             let strin = String(stringa)
-            let splitted = strin.characters.split{$0 == " "}.map(String.init)
+            let splitted = strin.split{$0 == " "}.map(String.init)
             var i = 0
             while i < splitted.count
             {
                 let oo = splitted[i]
-
+                
                 if (oo.range(of: "downloadOption") != nil){
                     var tempLink = ""
                     var tempTitle = ""
@@ -46,21 +46,21 @@ class VideoController: UIViewController {
                     while((splitted[i].range(of: "/a>")) == nil)
                     {
                         i += 1
-                        if(splitted[i].range(of: "href=") != nil){
-                           tempLink = splitted[i]
+                        if(splitted[i].range(of: "|||") != nil){
+                            tempLink = splitted[i].components(separatedBy: "|||")[1]
                         }
                         
-                        if(splitted[i].range(of: "\'>") != nil && tempLink.characters.count > 2){
+                        if(splitted[i].range(of: "\'>") != nil && tempLink.count > 2){
                             start = true
                         }
                         if(start)
                         {
-                           tempTitle += " " + splitted[i]
+                            tempTitle += " " + splitted[i]
                         }
-                     
+                        
                     }
                     let link = tempLink.replacingOccurrences(of: "href='", with: "")
-                    let title = tempTitle.replacingOccurrences(of: " Video'>", with: "").replacingOccurrences(of: "</a>\n<span", with: "")
+                    let title = tempTitle.components(separatedBy: "\n")[1]
                     self.downloadLinks.append(DownloadLink(link: link, title: title))
                 }
                 i += 1
@@ -68,28 +68,28 @@ class VideoController: UIViewController {
             
             
             DispatchQueue.main.async{
-            var i = 0
-            
-            for downloadLink in self.downloadLinks{
-                if(downloadLink.Title.range(of: "3GP") == nil)//AVPlayer for tvos can't play 3GP file
-                {
-                                   self.createButton(downloadLink,index: i)
+                var i = 0
+                
+                for downloadLink in self.downloadLinks{
+                    if(downloadLink.Title.range(of: "3GP") == nil)//AVPlayer for tvos can't play 3GP file
+                    {
+                        self.createButton(downloadLink,index: i)
+                    }
+                    i += 1;
                 }
-                                    i += 1;
-                                }
             }
         }) 
         task.resume()
     }
     
     
-    func tapped(_ sender: UIButton) {
+    @objc func tapped(_ sender: UIButton) {
         let object = self.downloadLinks[sender.tag]
-
-       self.performSegue(withIdentifier: "SeeVideo", sender: object)
+        
+        self.performSegue(withIdentifier: "SeeVideo", sender: object)
     }
-
-  
+    
+    
     
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any!) {
@@ -109,6 +109,7 @@ class VideoController: UIViewController {
         let button = UIButton(type: UIButtonType.system)
         button.frame =  CGRect(x: CGFloat(x), y: CGFloat(y), width: width, height: height)
         button.setTitle(download.Title, for: UIControlState())
+        button.titleLabel?.text = download.Title
         button.tag = index
         button.addTarget(self, action: #selector(VideoController.tapped(_:)), for: .primaryActionTriggered)
         button.clipsToBounds = true
